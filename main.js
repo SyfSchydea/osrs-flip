@@ -32,3 +32,42 @@ let mappingData = null;
 fetchApi("mapping", data => {
 	mappingData = data;
 });
+
+const pageLimit = 50;
+
+// Update the table of items
+function updatePrices() {
+	fetchApi("1h", data => {
+		let itemList = data.data;
+		console.log(data);
+
+		for (let item of mappingData) {
+			let itemPriceData = itemList[item.id];
+			if (!itemPriceData) {
+				continue;
+			}
+
+			itemPriceData.mapping = item;
+		}
+
+		let table = document.querySelector("#results tbody");
+		table.innerHTML = "";
+
+		let itemIds = Object.keys(itemList);
+		for (let i = 0; i < pageLimit; ++i) {
+			let id = itemIds[i];
+			let itemPriceData = itemList[id];
+			let item = itemPriceData.mapping;
+
+			let nameCell = document.createElement("td");
+			nameCell.textContent = item.name;
+
+			let row = document.createElement("tr");
+			row.appendChild(nameCell);
+
+			table.appendChild(row);
+		}
+	});
+}
+
+updatePrices();
