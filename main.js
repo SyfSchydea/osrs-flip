@@ -36,6 +36,13 @@ fetchApi("mapping", data => {
 
 const pageLimit = 50;
 
+// Add a table cell to a table row.
+function addCell(row, contents) {
+	let cell = document.createElement("td");
+	cell.textContent = contents;
+	row.appendChild(cell);
+}
+
 // Update the table of items
 function updatePrices() {
 	fetchApi("1h", data => {
@@ -49,6 +56,8 @@ function updatePrices() {
 			}
 
 			itemPriceData.mapping = item;
+
+			itemPriceData.margin = itemPriceData.avgHighPrice - itemPriceData.avgLowPrice;
 		}
 
 		let table = document.querySelector("#results tbody");
@@ -63,19 +72,15 @@ function updatePrices() {
 				continue;
 			}
 
-			let nameCell = document.createElement("td");
-			nameCell.textContent = item.name;
-
-			let lowPriceCell = document.createElement("td");
-			lowPriceCell.textContent = itemPriceData.avgLowPrice;
-
-			let highPriceCell = document.createElement("td");
-			highPriceCell.textContent = itemPriceData.avgHighPrice;
+			if (itemPriceData.margin <= 0) {
+				continue;
+			}
 
 			let row = document.createElement("tr");
-			row.appendChild(nameCell);
-			row.appendChild(lowPriceCell);
-			row.appendChild(highPriceCell);
+			addCell(row, item.name);
+			addCell(row, itemPriceData.avgLowPrice);
+			addCell(row, itemPriceData.avgHighPrice);
+			addCell(row, itemPriceData.margin);
 
 			table.appendChild(row);
 
