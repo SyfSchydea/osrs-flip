@@ -31,6 +31,7 @@ let mappingData = null;
 
 fetchApi("mapping", data => {
 	mappingData = data;
+	updatePrices();
 });
 
 const pageLimit = 50;
@@ -62,12 +63,18 @@ function updatePrices() {
 			let nameCell = document.createElement("td");
 			nameCell.textContent = item.name;
 
+			let lowPriceCell = document.createElement("td");
+			lowPriceCell.textContent = itemPriceData.avgLowPrice;
+
+			let highPriceCell = document.createElement("td");
+			highPriceCell.textContent = itemPriceData.avgHighPrice;
+
 			let row = document.createElement("tr");
 			row.appendChild(nameCell);
+			row.appendChild(lowPriceCell);
+			row.appendChild(highPriceCell);
 
 			table.appendChild(row);
 		}
 	});
 }
-
-updatePrices();
