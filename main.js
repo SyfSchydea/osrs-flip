@@ -54,11 +54,14 @@ function updatePrices() {
 		let table = document.querySelector("#results tbody");
 		table.innerHTML = "";
 
-		let itemIds = Object.keys(itemList);
-		for (let i = 0; i < pageLimit; ++i) {
-			let id = itemIds[i];
+		let rowsAdded = 0;
+		for (let id of Object.keys(itemList)) {
 			let itemPriceData = itemList[id];
 			let item = itemPriceData.mapping;
+
+			if (!itemPriceData.avgLowPrice || !itemPriceData.avgHighPrice) {
+				continue;
+			}
 
 			let nameCell = document.createElement("td");
 			nameCell.textContent = item.name;
@@ -75,6 +78,10 @@ function updatePrices() {
 			row.appendChild(highPriceCell);
 
 			table.appendChild(row);
+
+			if (++rowsAdded >= pageLimit) {
+				break;
+			}
 		}
 	});
 }
