@@ -37,6 +37,9 @@ let mappingData = null;
 // }
 let itemPrices = null;
 
+// Cache of volume data from /1h, /5m, etc.
+let itemVolumes = null;
+
 // Amount of money the user is currently willing to invest.
 // Updated by the input on the page.
 let userCashStack = null;
@@ -52,11 +55,9 @@ function addCell(row, contents) {
 
 // Recalculate profits, and repopulate the table
 function populateTable() {
-	if (itemPrices == null) {
-		console.error("Attempted to update table with no price data");
+	if (itemPrices == null || itemVolumes == null || mappingData == null) {
 		return;
 	}
-	let itemList = itemPrices;
 
 	let cashStack = userCashStack;
 	if (cashStack == null) {
@@ -65,7 +66,7 @@ function populateTable() {
 
 	// Calculate stats for each item
 	for (let item of mappingData) {
-		let itemPriceData = itemList[item.id];
+		let itemPriceData = itemPrices[item.id];
 		if (!itemPriceData) {
 			continue;
 		}
@@ -77,7 +78,7 @@ function populateTable() {
 	}
 
 	// Sort items by profit
-	let itemEntries = Object.entries(itemList);
+	let itemEntries = Object.entries(itemPrices);
 	itemEntries.sort((a, b) => b[1].margin - a[1].margin);
 
 	// Clear and repopulate table
@@ -87,6 +88,7 @@ function populateTable() {
 	let rowsAdded = 0;
 	for (let [id, itemPriceData] of itemEntries) {
 		let item = itemPriceData.mapping;
+		let volumes = itemVolumes[id];
 
 		// Skip items with missing data
 		if (!itemPriceData.avgLowPrice || !itemPriceData.avgHighPrice) {
@@ -108,8 +110,8 @@ function populateTable() {
 		addCell(row, itemPriceData.avgLowPrice);
 		addCell(row, itemPriceData.avgHighPrice);
 		addCell(row, itemPriceData.margin);
-		addCell(row, itemPriceData.lowPriceVolume);
-		addCell(row, itemPriceData.highPriceVolume);
+		addCell(row, volumes.lowPriceVolume);
+		addCell(row, volumes.highPriceVolume);
 
 		table.appendChild(row);
 
@@ -190,10 +192,16 @@ function updateCashStack(tableUpdate=true) {
 	}
 }
 
+fetchApi("24h", data => {
+	itemVolumes = data.data;
+	populateTable();
+});
 fetchApi("mapping", data => {
 	mappingData = data;
-	updatePrices();
+	populateTable();
 });
+
+updatePrices();
 
 window.onload = () => {
 	let cashstackInput = document.querySelector("#user-cash");
