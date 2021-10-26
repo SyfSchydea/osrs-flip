@@ -60,12 +60,14 @@ function updatePrices() {
 			itemPriceData.margin = itemPriceData.avgHighPrice - itemPriceData.avgLowPrice;
 		}
 
+		let itemEntries = Object.entries(itemList);
+		itemEntries.sort((a, b) => b[1].margin - a[1].margin);
+
 		let table = document.querySelector("#results tbody");
 		table.innerHTML = "";
 
 		let rowsAdded = 0;
-		for (let id of Object.keys(itemList)) {
-			let itemPriceData = itemList[id];
+		for (let [id, itemPriceData] of itemEntries) {
 			let item = itemPriceData.mapping;
 
 			if (!itemPriceData.avgLowPrice || !itemPriceData.avgHighPrice) {
