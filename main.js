@@ -74,7 +74,11 @@ function populateTable() {
 		itemPriceData.mapping = item;
 
 		itemPriceData.margin = itemPriceData.avgHighPrice - itemPriceData.avgLowPrice;
-		itemPriceData.maxQuantity = Math.floor(cashStack / itemPriceData.avgLowPrice);
+
+		itemPriceData.maxQuantity = Math.min(
+				Math.floor(cashStack / itemPriceData.avgLowPrice),
+				item.limit);
+
 		itemPriceData.potentialProfit = itemPriceData.margin * itemPriceData.maxQuantity;
 	}
 
@@ -92,7 +96,7 @@ function populateTable() {
 		let volumes = itemVolumes[id];
 
 		// Skip items with missing data
-		if (!itemPriceData.avgLowPrice || !itemPriceData.avgHighPrice) {
+		if (!itemPriceData.avgLowPrice || !itemPriceData.avgHighPrice || !volumes) {
 			continue;
 		}
 
@@ -108,11 +112,13 @@ function populateTable() {
 
 		let row = document.createElement("tr");
 		addCell(row, item.name);
+		addCell(row, item.limit);
 		addCell(row, itemPriceData.avgLowPrice);
 		addCell(row, itemPriceData.avgHighPrice);
 		addCell(row, itemPriceData.margin);
 		addCell(row, volumes.lowPriceVolume);
 		addCell(row, volumes.highPriceVolume);
+		addCell(row, itemPriceData.maxQuantity);
 		addCell(row, itemPriceData.potentialProfit);
 
 		table.appendChild(row);
@@ -200,10 +206,9 @@ fetchApi("24h", data => {
 });
 fetchApi("mapping", data => {
 	mappingData = data;
-	populateTable();
+	updatePrices();
 });
 
-updatePrices();
 
 window.onload = () => {
 	let cashstackInput = document.querySelector("#user-cash");
