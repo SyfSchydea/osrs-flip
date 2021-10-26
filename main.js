@@ -131,9 +131,52 @@ function updatePrices() {
 	});
 }
 
+// Parse an amount string
+// Allows k, m, and b to be used
+// eg 5k -> 5000
+//    2m -> 2000000
+//    1.2b -> 1200000000
+function parseAmount(amtText) {
+	let match = amtText.match(/^(\d*(?:\.\d*)?)([kmb]+)$/i);
+	if (!match) {
+		return null;
+	}
+
+	let amt = +match[1];
+	if (isNaN(amt)) {
+		return null;
+	}
+
+	for (let c of match[2]) {
+		switch (c) {
+			case "k":
+			case "K":
+				amt *= 1000;
+				break;
+
+			case "m":
+			case "M":
+				amt *= 1e6;
+				break;
+
+			case "b":
+			case "B":
+				amt *= 1e9;
+				break;
+		}
+	}
+
+	return amt;
+}
+
 function updateCashStack(tableUpdate=true) {
 	let cashstackInput = document.querySelector("#user-cash");
-	userCashStack = +cashstackInput.value;
+	let amt = parseAmount(cashstackInput.value);
+	if (amt == null) {
+		return;
+	}
+
+	userCashStack = amt;
 	if (tableUpdate) {
 		populateTable();
 	}
