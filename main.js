@@ -29,6 +29,14 @@ function fetchApi(request, onLoad, onError=NOOP) {
 // Note that the documentation says this is not finalised and could change.
 let mappingData = null;
 
+// Cache of price data from /1h, /5m, etc.
+// Contains: {
+//   [id]: {
+//     
+//   }
+// }
+let itemPrices = null;
+
 // Amount of money the user is currently willing to invest.
 // Updated by the input on the page.
 let userCashStack = null;
@@ -42,16 +50,72 @@ function addCell(row, contents) {
 	row.appendChild(cell);
 }
 
+// Recalculate profits, and repopulate the table
+function populateTable() {
+	if (itemPrices == null) {
+		console.error("Attempted to update table with no price data");
+		return;
+	}
+	let itemList = itemPrices;
+
+	let cashStack = userCashStack;
+	if (cashStack == null) {
+		cashStack = 2147483647;
+	}
+
+	for (let item of mappingData) {
+		let itemPriceData = itemList[item.id];
+		if (!itemPriceData) {
+			continue;
+		}
+
+		itemPriceData.mapping = item;
+
+		itemPriceData.margin = itemPriceData.avgHighPrice - itemPriceData.avgLowPrice;
+		itemPriceData.maxQuantity = Math.floor(cashStack / itemPriceData.avgLowPrice);
+	}
+
+	let itemEntries = Object.entries(itemList);
+	itemEntries.sort((a, b) => b[1].margin - a[1].margin);
+
+	let table = document.querySelector("#results tbody");
+	table.innerHTML = "";
+
+	let rowsAdded = 0;
+	for (let [id, itemPriceData] of itemEntries) {
+		let item = itemPriceData.mapping;
+
+		if (!itemPriceData.avgLowPrice || !itemPriceData.avgHighPrice) {
+			continue;
+		}
+
+		if (itemPriceData.margin <= 0) {
+			continue;
+		}
+
+		if (itemPriceData.maxQuantity == 0) {
+			continue;
+		}
+
+		let row = document.createElement("tr");
+		addCell(row, item.name);
+		addCell(row, itemPriceData.avgLowPrice);
+		addCell(row, itemPriceData.avgHighPrice);
+		addCell(row, itemPriceData.margin);
+
+		table.appendChild(row);
+
+		if (++rowsAdded >= pageLimit) {
+			break;
+		}
+	}
+}
+
+
 // Update the table of items
 function updatePrices() {
 	fetchApi("1h", data => {
 		let itemList = data.data;
-		console.log(itemList);
-
-		let cashStack = userCashStack;
-		if (cashStack == null) {
-			cashStack = 2147483647;
-		}
 
 		for (let item of mappingData) {
 			let itemPriceData = itemList[item.id];
@@ -60,52 +124,17 @@ function updatePrices() {
 			}
 
 			itemPriceData.mapping = item;
-
-			itemPriceData.margin = itemPriceData.avgHighPrice - itemPriceData.avgLowPrice;
-			itemPriceData.maxQuantity = Math.floor(cashStack / itemPriceData.avgLowPrice);
 		}
 
-		let itemEntries = Object.entries(itemList);
-		itemEntries.sort((a, b) => b[1].margin - a[1].margin);
-
-		let table = document.querySelector("#results tbody");
-		table.innerHTML = "";
-
-		let rowsAdded = 0;
-		for (let [id, itemPriceData] of itemEntries) {
-			let item = itemPriceData.mapping;
-
-			if (!itemPriceData.avgLowPrice || !itemPriceData.avgHighPrice) {
-				continue;
-			}
-
-			if (itemPriceData.margin <= 0) {
-				continue;
-			}
-
-			if (itemPriceData.maxQuantity == 0) {
-				continue;
-			}
-
-			let row = document.createElement("tr");
-			addCell(row, item.name);
-			addCell(row, itemPriceData.avgLowPrice);
-			addCell(row, itemPriceData.avgHighPrice);
-			addCell(row, itemPriceData.margin);
-
-			table.appendChild(row);
-
-			if (++rowsAdded >= pageLimit) {
-				break;
-			}
-		}
+		itemPrices = itemList;
+		populateTable();
 	});
 }
 
 function updateCashStack() {
 	let cashstackInput = document.querySelector("#user-cash");
 	userCashStack = +cashstackInput.value;
-	updatePrices();
+	populateTable();
 }
 
 fetchApi("mapping", data => {
