@@ -108,6 +108,8 @@ function populateTable() {
 		addCell(row, itemPriceData.avgLowPrice);
 		addCell(row, itemPriceData.avgHighPrice);
 		addCell(row, itemPriceData.margin);
+		addCell(row, itemPriceData.lowPriceVolume);
+		addCell(row, itemPriceData.highPriceVolume);
 
 		table.appendChild(row);
 
