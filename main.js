@@ -44,6 +44,13 @@ let itemVolumes = null;
 // Updated by the input on the page.
 let userCashStack = null;
 
+// How long the user is willing to wait for transactions to complete
+let userFlipPeriod = null;
+
+// Constants about how much data to consider for trading volume
+const VOLUME_PERIOD_API_CALL = "24h";
+const VOLUME_PERIOD_HOURS = 24;
+
 const pageLimit = 50;
 
 // Add a table cell to a table row.
@@ -64,10 +71,16 @@ function populateTable() {
 		cashStack = 2147483647;
 	}
 
+	let period = userFlipPeriod;
+	if (period == null) {
+		period = 4;
+	}
+
 	// Calculate stats for each item
 	for (let item of mappingData) {
 		let itemPriceData = itemPrices[item.id];
-		if (!itemPriceData) {
+		let volumes = itemVolumes[item.id];
+		if (!itemPriceData || !volumes) {
 			continue;
 		}
 
@@ -75,9 +88,11 @@ function populateTable() {
 
 		itemPriceData.margin = itemPriceData.avgHighPrice - itemPriceData.avgLowPrice;
 
-		itemPriceData.maxQuantity = Math.min(
-				Math.floor(cashStack / itemPriceData.avgLowPrice),
-				item.limit);
+		itemPriceData.maxQuantity = Math.floor(Math.min(
+				cashStack / itemPriceData.avgLowPrice,
+				item.limit,
+				volumes.lowPriceVolume  / VOLUME_PERIOD_HOURS * period,
+				volumes.highPriceVolume / VOLUME_PERIOD_HOURS * period));
 
 		itemPriceData.potentialProfit = itemPriceData.margin * itemPriceData.maxQuantity;
 	}
@@ -200,7 +215,20 @@ function updateCashStack(tableUpdate=true) {
 	}
 }
 
-fetchApi("24h", data => {
+function updateFlipPeriod(tableUpdate=true) {
+	let flipPeriodInput = document.querySelector("#flip-period");
+	let period = +flipPeriodInput.value;
+	if (isNaN(period)) {
+		return;
+	}
+
+	userFlipPeriod = period;
+	if (tableUpdate) {
+		populateTable();
+	}
+}
+
+fetchApi(VOLUME_PERIOD_API_CALL, data => {
 	itemVolumes = data.data;
 	populateTable();
 });
@@ -212,7 +240,11 @@ fetchApi("mapping", data => {
 
 window.onload = () => {
 	let cashstackInput = document.querySelector("#user-cash");
-	cashstackInput.addEventListener("change", updateCashStack);
+	cashstackInput.addEventListener("change", updateCashStack.bind(null, true));
+
+	let flipPeriodInput = document.querySelector("#flip-period");
+	flipPeriodInput.addEventListener("change", updateFlipPeriod.bind(null, true));
 
 	updateCashStack(false);
+	updateFlipPeriod(false);
 };
