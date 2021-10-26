@@ -63,6 +63,7 @@ function populateTable() {
 		cashStack = 2147483647;
 	}
 
+	// Calculate stats for each item
 	for (let item of mappingData) {
 		let itemPriceData = itemList[item.id];
 		if (!itemPriceData) {
@@ -75,9 +76,11 @@ function populateTable() {
 		itemPriceData.maxQuantity = Math.floor(cashStack / itemPriceData.avgLowPrice);
 	}
 
+	// Sort items by profit
 	let itemEntries = Object.entries(itemList);
 	itemEntries.sort((a, b) => b[1].margin - a[1].margin);
 
+	// Clear and repopulate table
 	let table = document.querySelector("#results tbody");
 	table.innerHTML = "";
 
@@ -85,14 +88,17 @@ function populateTable() {
 	for (let [id, itemPriceData] of itemEntries) {
 		let item = itemPriceData.mapping;
 
+		// Skip items with missing data
 		if (!itemPriceData.avgLowPrice || !itemPriceData.avgHighPrice) {
 			continue;
 		}
 
+		// Skip items which don't profit
 		if (itemPriceData.margin <= 0) {
 			continue;
 		}
 
+		// Skip items which we can't afford to buy any of
 		if (itemPriceData.maxQuantity == 0) {
 			continue;
 		}
