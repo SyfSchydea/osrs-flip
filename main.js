@@ -75,11 +75,12 @@ function populateTable() {
 
 		itemPriceData.margin = itemPriceData.avgHighPrice - itemPriceData.avgLowPrice;
 		itemPriceData.maxQuantity = Math.floor(cashStack / itemPriceData.avgLowPrice);
+		itemPriceData.potentialProfit = itemPriceData.margin * itemPriceData.maxQuantity;
 	}
 
 	// Sort items by profit
 	let itemEntries = Object.entries(itemPrices);
-	itemEntries.sort((a, b) => b[1].margin - a[1].margin);
+	itemEntries.sort((a, b) => b[1].potentialProfit - a[1].potentialProfit);
 
 	// Clear and repopulate table
 	let table = document.querySelector("#results tbody");
@@ -112,6 +113,7 @@ function populateTable() {
 		addCell(row, itemPriceData.margin);
 		addCell(row, volumes.lowPriceVolume);
 		addCell(row, volumes.highPriceVolume);
+		addCell(row, itemPriceData.potentialProfit);
 
 		table.appendChild(row);
 
