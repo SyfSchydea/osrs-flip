@@ -131,10 +131,12 @@ function updatePrices() {
 	});
 }
 
-function updateCashStack() {
+function updateCashStack(tableUpdate=true) {
 	let cashstackInput = document.querySelector("#user-cash");
 	userCashStack = +cashstackInput.value;
-	populateTable();
+	if (tableUpdate) {
+		populateTable();
+	}
 }
 
 fetchApi("mapping", data => {
@@ -143,7 +145,8 @@ fetchApi("mapping", data => {
 });
 
 window.onload = () => {
-	console.log("load");
 	let cashstackInput = document.querySelector("#user-cash");
 	cashstackInput.addEventListener("change", updateCashStack);
+
+	updateCashStack(false);
 };
