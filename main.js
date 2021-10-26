@@ -29,10 +29,9 @@ function fetchApi(request, onLoad, onError=NOOP) {
 // Note that the documentation says this is not finalised and could change.
 let mappingData = null;
 
-fetchApi("mapping", data => {
-	mappingData = data;
-	updatePrices();
-});
+// Amount of money the user is currently willing to invest.
+// Updated by the input on the page.
+let userCashStack = null;
 
 const pageLimit = 50;
 
@@ -47,7 +46,12 @@ function addCell(row, contents) {
 function updatePrices() {
 	fetchApi("1h", data => {
 		let itemList = data.data;
-		console.log(data);
+		console.log(itemList);
+
+		let cashStack = userCashStack;
+		if (cashStack == null) {
+			cashStack = 2147483647;
+		}
 
 		for (let item of mappingData) {
 			let itemPriceData = itemList[item.id];
@@ -58,6 +62,7 @@ function updatePrices() {
 			itemPriceData.mapping = item;
 
 			itemPriceData.margin = itemPriceData.avgHighPrice - itemPriceData.avgLowPrice;
+			itemPriceData.maxQuantity = Math.floor(cashStack / itemPriceData.avgLowPrice);
 		}
 
 		let itemEntries = Object.entries(itemList);
@@ -78,6 +83,10 @@ function updatePrices() {
 				continue;
 			}
 
+			if (itemPriceData.maxQuantity == 0) {
+				continue;
+			}
+
 			let row = document.createElement("tr");
 			addCell(row, item.name);
 			addCell(row, itemPriceData.avgLowPrice);
@@ -92,3 +101,20 @@ function updatePrices() {
 		}
 	});
 }
+
+function updateCashStack() {
+	let cashstackInput = document.querySelector("#user-cash");
+	userCashStack = +cashstackInput.value;
+	updatePrices();
+}
+
+fetchApi("mapping", data => {
+	mappingData = data;
+	updatePrices();
+});
+
+window.onload = () => {
+	console.log("load");
+	let cashstackInput = document.querySelector("#user-cash");
+	cashstackInput.addEventListener("change", updateCashStack);
+};
