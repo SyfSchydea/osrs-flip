@@ -81,7 +81,7 @@ function populateTable() {
 	}
 
 	let period = userFlipPeriod;
-	if (period == null) {
+	if (!period) {
 		period = 4;
 	}
 
