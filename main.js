@@ -178,10 +178,15 @@ function populateTable() {
 	}
 }
 
+// Fetch the api call being used for price data based on the option on the page.
+function getPriceApiSource() {
+	let pricePeriodInput = document.querySelector("#price-period");
+	return pricePeriodInput.value;
+}
 
 // Update the table of items
 function updatePrices() {
-	fetchApi("1h", data => {
+	fetchApi(getPriceApiSource(), data => {
 		let itemList = data.data;
 
 		for (let item of mappingData) {
@@ -292,8 +297,10 @@ window.onload = () => {
 	refreshButton.addEventListener("click", e => {
 		updatePrices();
 		updateVolumes();
-		console.log("refreshing");
 	});
+
+	let pricePeriodInput = document.querySelector("#price-period");
+	pricePeriodInput.addEventListener("change", updatePrices);
 
 	updateCashStack(false);
 	updateFlipPeriod(false);
