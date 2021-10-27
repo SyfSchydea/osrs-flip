@@ -97,11 +97,19 @@ function populateTable() {
 
 		itemPriceData.margin = itemPriceData.avgHighPrice - itemPriceData.avgLowPrice;
 
-		itemPriceData.maxQuantity = Math.floor(Math.min(
-				cashStack / itemPriceData.avgLowPrice,
-				item.limit,
-				volumes.lowPriceVolume  / VOLUME_PERIOD_HOURS * period,
-				volumes.highPriceVolume / VOLUME_PERIOD_HOURS * period));
+		let cashStackLimit = cashStack / itemPriceData.avgLowPrice;
+		let buyLimit = item.limit;
+		let lowVolumeLimit  = volumes.lowPriceVolume  / VOLUME_PERIOD_HOURS * period;
+		let highVolumeLimit = volumes.highPriceVolume / VOLUME_PERIOD_HOURS * period;
+
+		let flipQty = Math.min(cashStackLimit, buyLimit, lowVolumeLimit, highVolumeLimit);
+		itemPriceData.limitingFactor =
+			flipQty == cashStackLimit?  "Cash Stack" :
+			flipQty == buyLimit?        "GE Buy Limit" :
+			flipQty == lowVolumeLimit?  "Low Price Volume" :
+			                            "High Price Volume";
+
+		itemPriceData.maxQuantity = Math.floor(flipQty);
 
 		itemPriceData.potentialProfit = itemPriceData.margin * itemPriceData.maxQuantity;
 	}
@@ -143,6 +151,7 @@ function populateTable() {
 		addCell(row, volumes.lowPriceVolume);
 		addCell(row, volumes.highPriceVolume);
 		addCell(row, itemPriceData.maxQuantity);
+		addCell(row, itemPriceData.limitingFactor);
 		addCell(row, itemPriceData.potentialProfit);
 
 		table.appendChild(row);
