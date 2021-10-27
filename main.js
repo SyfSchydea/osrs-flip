@@ -54,7 +54,7 @@ const VOLUME_PERIOD_HOURS = 24;
 const pageLimit = 50;
 
 // Add a table cell to a table row.
-function addCell(row, contents, link=null) {
+function addCell(row, contents, link=null, numeric=false) {
 	if (typeof contents == "number") {
 		contents = contents.toLocaleString();
 	}
@@ -70,7 +70,16 @@ function addCell(row, contents, link=null) {
 		cell.textContent = contents;
 	}
 
+	if (numeric) {
+		cell.classList.add("numeric");
+	}
+
 	row.appendChild(cell);
+}
+
+// Add a cell which holds a number of some kind
+function addNumericCell(row, contents) {
+	addCell(row, contents, null, true);
 }
 
 // Recalculate profits, and repopulate the table
@@ -148,15 +157,15 @@ function populateTable() {
 
 		let row = document.createElement("tr");
 		addCell(row, item.name, "https://prices.runescape.wiki/osrs/item/" + item.id);
-		addCell(row, item.limit);
-		addCell(row, itemPriceData.avgLowPrice);
-		addCell(row, itemPriceData.avgHighPrice);
-		addCell(row, itemPriceData.margin);
-		addCell(row, volumes.lowPriceVolume);
-		addCell(row, volumes.highPriceVolume);
-		addCell(row, itemPriceData.maxQuantity);
+		addNumericCell(row, item.limit);
+		addNumericCell(row, formatGp(itemPriceData.avgLowPrice));
+		addNumericCell(row, formatGp(itemPriceData.avgHighPrice));
+		addNumericCell(row, formatGp(itemPriceData.margin));
+		addNumericCell(row, volumes.lowPriceVolume);
+		addNumericCell(row, volumes.highPriceVolume);
+		addNumericCell(row, itemPriceData.maxQuantity);
 		addCell(row, itemPriceData.limitingFactor);
-		addCell(row, itemPriceData.potentialProfit);
+		addNumericCell(row, formatGp(itemPriceData.potentialProfit));
 
 		table.appendChild(row);
 
@@ -222,6 +231,11 @@ function parseAmount(amtText) {
 	}
 
 	return amt;
+}
+
+// Format an amount of gp
+function formatGp(num) {
+	return num.toLocaleString() + "gp";
 }
 
 function updateCashStack(tableUpdate=true) {
