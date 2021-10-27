@@ -98,6 +98,9 @@ function populateTable() {
 		period = 4;
 	}
 
+	// Number of 4-hour GE buy limit periods which will pass over the course of this flip
+	let geLimitWindows = Math.ceil(period / 4);
+
 	// Calculate stats for each item
 	for (let item of mappingData) {
 		let itemPriceData = itemPrices[item.id];
@@ -111,7 +114,7 @@ function populateTable() {
 		itemPriceData.margin = itemPriceData.avgHighPrice - itemPriceData.avgLowPrice;
 
 		let cashStackLimit = cashStack / itemPriceData.avgLowPrice;
-		let buyLimit = item.limit;
+		let buyLimit = item.limit * geLimitWindows;
 		let lowVolumeLimit  = volumes.lowPriceVolume  / VOLUME_PERIOD_HOURS * period;
 		let highVolumeLimit = volumes.highPriceVolume / VOLUME_PERIOD_HOURS * period;
 
