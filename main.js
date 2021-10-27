@@ -55,6 +55,10 @@ const pageLimit = 50;
 
 // Add a table cell to a table row.
 function addCell(row, contents, link=null) {
+	if (typeof contents == "number") {
+		contents = contents.toLocaleString();
+	}
+
 	let cell = document.createElement("td");
 
 	if (link != null) {
