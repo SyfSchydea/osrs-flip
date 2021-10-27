@@ -195,6 +195,14 @@ function updatePrices() {
 	});
 }
 
+// Update item trading volumes
+function updateVolumes() {
+	fetchApi(VOLUME_PERIOD_API_CALL, data => {
+		itemVolumes = data.data;
+		populateTable();
+	});
+}
+
 // Parse an amount string
 // Allows k, m, and b to be used
 // eg 5k -> 5000
@@ -264,15 +272,11 @@ function updateFlipPeriod(tableUpdate=true) {
 	}
 }
 
-fetchApi(VOLUME_PERIOD_API_CALL, data => {
-	itemVolumes = data.data;
-	populateTable();
-});
 fetchApi("mapping", data => {
 	mappingData = data;
 	updatePrices();
 });
-
+updateVolumes();
 
 window.onload = () => {
 	let cashstackInput = document.querySelector("#user-cash");
@@ -280,6 +284,13 @@ window.onload = () => {
 
 	let flipPeriodInput = document.querySelector("#flip-period");
 	flipPeriodInput.addEventListener("change", updateFlipPeriod.bind(null, true));
+
+	let refreshButton = document.querySelector("#refresh-button");
+	refreshButton.addEventListener("click", e => {
+		updatePrices();
+		updateVolumes();
+		console.log("refreshing");
+	});
 
 	updateCashStack(false);
 	updateFlipPeriod(false);
