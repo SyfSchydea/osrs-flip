@@ -54,9 +54,18 @@ const VOLUME_PERIOD_HOURS = 24;
 const pageLimit = 50;
 
 // Add a table cell to a table row.
-function addCell(row, contents) {
+function addCell(row, contents, link=null) {
 	let cell = document.createElement("td");
-	cell.textContent = contents;
+
+	if (link != null) {
+		let a = document.createElement("a");
+		a.href = link;
+		a.textContent = contents;
+		cell.appendChild(a);
+	} else {
+		cell.textContent = contents;
+	}
+
 	row.appendChild(cell);
 }
 
@@ -126,7 +135,7 @@ function populateTable() {
 		}
 
 		let row = document.createElement("tr");
-		addCell(row, item.name);
+		addCell(row, item.name, "https://prices.runescape.wiki/osrs/item/" + item.id);
 		addCell(row, item.limit);
 		addCell(row, itemPriceData.avgLowPrice);
 		addCell(row, itemPriceData.avgHighPrice);
