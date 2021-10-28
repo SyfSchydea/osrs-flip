@@ -158,6 +158,11 @@ function populateTable() {
 			continue;
 		}
 
+		// Skip bonds since they can't be resold easily
+		if (item.id == 13190) {
+			continue;
+		}
+
 		let row = document.createElement("tr");
 		addCell(row, item.name, "https://prices.runescape.wiki/osrs/item/" + item.id);
 		addNumericCell(row, item.limit);
