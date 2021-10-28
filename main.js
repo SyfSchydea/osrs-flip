@@ -40,6 +40,10 @@ let itemPrices = null;
 // Cache of volume data from /1h, /5m, etc.
 let itemVolumes = null;
 
+// Timestamps for when each dataset was updated
+let priceDataUpdated = null;
+let volumeDataUpdated = null;
+
 // Amount of money the user is currently willing to invest.
 // Updated by the input on the page.
 let userCashStack = null;
@@ -189,6 +193,14 @@ function getPriceApiSource() {
 	return pricePeriodInput.value;
 }
 
+// Show the player how old the data they're currently looking at is.
+function updateDataAgeDisplay() {
+	let display = document.querySelector("#price-data-age-display");
+	let date = new Date(Math.max(priceDataUpdated, volumeDataUpdated));
+
+	display.textContent = "Data updated " + date.toLocaleString();
+}
+
 // Update the table of items
 function updatePrices() {
 	fetchApi(getPriceApiSource(), data => {
@@ -204,6 +216,9 @@ function updatePrices() {
 		}
 
 		itemPrices = itemList;
+		priceDataUpdated = +new Date();
+
+		updateDataAgeDisplay();
 		populateTable();
 	});
 }
@@ -212,6 +227,9 @@ function updatePrices() {
 function updateVolumes() {
 	fetchApi(VOLUME_PERIOD_API_CALL, data => {
 		itemVolumes = data.data;
+		volumeDataUpdated = +new Date();
+
+		updateDataAgeDisplay();
 		populateTable();
 	});
 }
