@@ -279,6 +279,59 @@ function parseAmount(amtText) {
 	return amt;
 }
 
+// Parse a string for a period of time.
+// Returns time period as a number of hours
+// eg. 1 for 1 hour
+//    24 for 1 day
+//     0.16666... for 10 minutes
+function parsePeriod(text) {
+	let match = text.match(/^\s*(\d*(?:\.\d*)?)\s*(\w*)\s*$/i);
+	if (!match) {
+		return null;
+	}
+
+	let num = +match[1];
+	if (isNaN(num)) {
+		return null;
+	}
+
+	switch (match[2].toLowerCase()) {
+		case "d":
+		case "day":
+		case "days":
+			num *= 24;
+
+		case "":
+		case "h":
+		case "hr":
+		case "hrs":
+		case "hour":
+		case "hours":
+			break;
+
+		case "m":
+		case "min":
+		case "mins":
+		case "minute":
+		case "minutes":
+			num /= 60;
+			break;
+
+		case "s":
+		case "sec":
+		case "secs":
+		case "second":
+		case "seconds":
+			num /= 60 * 60;
+			break;
+
+		default:
+			return null;
+	}
+
+	return num;
+}
+
 // Format an amount of gp
 function formatGp(num) {
 	return num.toLocaleString() + "gp";
@@ -299,8 +352,8 @@ function updateCashStack(tableUpdate=true) {
 
 function updateFlipPeriod(tableUpdate=true) {
 	let flipPeriodInput = document.querySelector("#flip-period");
-	let period = +flipPeriodInput.value;
-	if (isNaN(period)) {
+	let period = parsePeriod(flipPeriodInput.value);
+	if (period == null) {
 		return;
 	}
 
