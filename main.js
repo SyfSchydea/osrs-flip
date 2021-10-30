@@ -332,6 +332,17 @@ function parsePeriod(text) {
 	return num;
 }
 
+/**
+ * Convert a number of hours to a readable string.
+ */
+function periodToString(period) {
+	if (period < 1) {
+		return (period * 60) + " minutes";
+	} else {
+		return period + " hours";
+	}
+}
+
 // Format an amount of gp
 function formatGp(num) {
 	return num.toLocaleString() + "gp";
@@ -353,12 +364,13 @@ function updateCashStack(tableUpdate=true) {
 function updateFlipPeriod(tableUpdate=true) {
 	let flipPeriodInput = document.querySelector("#flip-period");
 	let period = parsePeriod(flipPeriodInput.value);
-	if (period == null) {
-		return;
+	if (period != null) {
+		userFlipPeriod = period;
 	}
 
-	userFlipPeriod = period;
-	if (tableUpdate) {
+	flipPeriodInput.value = periodToString(userFlipPeriod);
+
+	if (period != null && tableUpdate) {
 		populateTable();
 	}
 }
