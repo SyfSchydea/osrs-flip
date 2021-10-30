@@ -203,7 +203,8 @@ function updateDataAgeDisplay() {
 
 // Update the table of items
 function updatePrices() {
-	fetchApi(getPriceApiSource(), data => {
+	let src = getPriceApiSource();
+	fetchApi(src, data => {
 		let itemList = data.data;
 
 		for (let item of mappingData) {
@@ -213,6 +214,12 @@ function updatePrices() {
 			}
 
 			itemPriceData.mapping = item;
+
+			// /latest formats data slightly differently to 5m, 10m, etc.
+			if (src == "latest") {
+				itemPriceData.avgHighPrice = itemPriceData.high;
+				itemPriceData.avgLowPrice  = itemPriceData.low;
+			}
 		}
 
 		itemPrices = itemList;
