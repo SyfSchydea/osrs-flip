@@ -55,6 +55,9 @@ let userFlipPeriod = null;
 const VOLUME_PERIOD_API_CALL = "24h";
 const VOLUME_PERIOD_HOURS = 24;
 
+// How often should the auto-refresh trigger? (ms)
+const AUTO_REFRESH_INTERVAL = 60 * 1000;
+
 const pageLimit = 50;
 
 // Add a table cell to a table row.
@@ -381,6 +384,45 @@ fetchApi("mapping", data => {
 });
 updateVolumes();
 
+// Update all data
+function refreshData() {
+	updatePrices();
+	updateVolumes();
+}
+
+let autoRefreshTimeoutId = null;
+
+// Called regularly to handle auto-updates
+function autoRefreshTick() {
+	autoRefreshTimeoutId = null;
+
+	let autoRefreshToggle = document.querySelector("#auto-refresh-enable");
+	if (!autoRefreshToggle.checked) {
+		return;
+	}
+
+	refreshData();
+	scheduleAutoRefresh();
+}
+
+// Schedule the next tick of the auto-refresh
+function scheduleAutoRefresh() {
+	if (autoRefreshTimeoutId == null) {
+		autoRefreshTimeoutId = setTimeout(autoRefreshTick, AUTO_REFRESH_INTERVAL);
+	}
+}
+
+// Start the auto-refresh if the checkbox is enabled, or disable it otherwise
+function updateAutoRefresh() {
+	let autoRefreshToggle = document.querySelector("#auto-refresh-enable");
+	if (autoRefreshToggle.checked) {
+		scheduleAutoRefresh();
+	} else if (autoRefreshTimeoutId != null) {
+		clearTimeout(autoRefreshTimeoutId);
+		autoRefreshTimeoutId = null;
+	}
+}
+
 window.onload = () => {
 	let cashstackInput = document.querySelector("#user-cash");
 	cashstackInput.addEventListener("change", updateCashStack.bind(null, true));
@@ -389,14 +431,15 @@ window.onload = () => {
 	flipPeriodInput.addEventListener("change", updateFlipPeriod.bind(null, true));
 
 	let refreshButton = document.querySelector("#refresh-button");
-	refreshButton.addEventListener("click", e => {
-		updatePrices();
-		updateVolumes();
-	});
+	refreshButton.addEventListener("click", refreshData);
 
 	let pricePeriodInput = document.querySelector("#price-period");
 	pricePeriodInput.addEventListener("change", updatePrices);
 
+	let autoRefreshToggle = document.querySelector("#auto-refresh-enable");
+	autoRefreshToggle.addEventListener("change", updateAutoRefresh);
+
 	updateCashStack(false);
 	updateFlipPeriod(false);
+	updateAutoRefresh();
 };
