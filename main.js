@@ -401,7 +401,10 @@ function autoRefreshTick() {
 		return;
 	}
 
-	refreshData();
+	if (document.visibilityState == "visible") {
+		refreshData();
+	}
+
 	scheduleAutoRefresh();
 }
 
