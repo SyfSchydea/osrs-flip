@@ -391,6 +391,7 @@ function refreshData() {
 }
 
 let autoRefreshTimeoutId = null;
+let autoRefreshOnTabIn = false;
 
 // Called regularly to handle auto-updates
 function autoRefreshTick() {
@@ -403,6 +404,9 @@ function autoRefreshTick() {
 
 	if (document.visibilityState == "visible") {
 		refreshData();
+	} else {
+		autoRefreshOnTabIn = true;
+		return;
 	}
 
 	scheduleAutoRefresh();
@@ -441,6 +445,13 @@ window.onload = () => {
 
 	let autoRefreshToggle = document.querySelector("#auto-refresh-enable");
 	autoRefreshToggle.addEventListener("change", updateAutoRefresh);
+
+	document.addEventListener("visibilitychange", e => {
+		if (document.visibilityState == "visible" && autoRefreshOnTabIn) {
+			autoRefreshOnTabIn = false;
+			autoRefreshTick();
+		}
+	});
 
 	updateCashStack(false);
 	updateFlipPeriod(false);
