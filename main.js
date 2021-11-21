@@ -192,8 +192,7 @@ function populateTable() {
 
 // Fetch the api call being used for price data based on the option on the page.
 function getPriceApiSource() {
-	let pricePeriodInput = document.querySelector("#price-period");
-	return pricePeriodInput.value;
+	return getPricePeriodInput().value;
 }
 
 // Show the player how old the data they're currently looking at is.
@@ -373,8 +372,16 @@ function updateFlipPeriod(tableUpdate=true) {
 
 	flipPeriodInput.value = periodToString(userFlipPeriod);
 
-	if (period != null && tableUpdate) {
+	if (period == null) {
+		return;
+	}
+
+	if (tableUpdate) {
 		populateTable();
+	}
+
+	if (getAutoPeriodToggle().checked) {
+		setAutoPricePeriod();
 	}
 }
 
@@ -430,6 +437,57 @@ function updateAutoRefresh() {
 	}
 }
 
+// Fetch the "Set price period automatically" checkbox
+function getAutoPeriodToggle() {
+	return document.querySelector("#auto-price-period");
+}
+
+// Fetch the price period input
+function getPricePeriodInput() {
+	return document.querySelector("#price-period");
+}
+
+// Update whether or not auto-price-period is enabled.
+// Called once on load, and once every time it is toggled.
+function updateAutoPricePeriod() {
+	let autoEnabled = getAutoPeriodToggle().checked;
+
+	getPricePeriodInput().disabled = autoEnabled;
+
+	if (autoEnabled) {
+		setAutoPricePeriod();
+	}
+}
+
+// Update price data period according to flip period
+function setAutoPricePeriod() {
+	if (userFlipPeriod == null) {
+		return;
+	}
+
+	let pricePeriodInput = getPricePeriodInput();
+
+	let bestOption = null;
+	let bestPeriod = -1;
+	for (let opt of pricePeriodInput.querySelectorAll("option")) {
+		let period = +opt.getAttribute("data-hours");
+
+		if (period <= userFlipPeriod && period > bestPeriod) {
+			bestPeriod = period;
+			bestOption = opt;
+		}
+	}
+	
+	if (bestOption == null) {
+		return;
+	}
+
+	if (pricePeriodInput.value != bestOption.value) {
+		pricePeriodInput.value = bestOption.value;
+		updatePrices();
+	}
+}
+
 window.onload = () => {
 	let cashstackInput = document.querySelector("#user-cash");
 	cashstackInput.addEventListener("change", updateCashStack.bind(null, true));
@@ -440,8 +498,8 @@ window.onload = () => {
 	let refreshButton = document.querySelector("#refresh-button");
 	refreshButton.addEventListener("click", refreshData);
 
-	let pricePeriodInput = document.querySelector("#price-period");
-	pricePeriodInput.addEventListener("change", updatePrices);
+	getAutoPeriodToggle().addEventListener("change", updateAutoPricePeriod);
+	getPricePeriodInput().addEventListener("change", updatePrices);
 
 	let autoRefreshToggle = document.querySelector("#auto-refresh-enable");
 	autoRefreshToggle.addEventListener("change", updateAutoRefresh);
@@ -453,6 +511,7 @@ window.onload = () => {
 		}
 	});
 
+	updateAutoPricePeriod();
 	updateCashStack(false);
 	updateFlipPeriod(false);
 	updateAutoRefresh();
